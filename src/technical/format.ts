@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import type { Tender } from '../api/generated/tengoMockAPI.schemas'
+import type { Tender } from '@/api/generated/tengoMockAPI.schemas'
 
 /** Placeholder shown when a value is missing. */
 const EMPTY = '—'
