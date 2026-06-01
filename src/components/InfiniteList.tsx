@@ -59,9 +59,9 @@ export function InfiniteList<T>({
   });
 
   const virtualRows = virtualizer.getVirtualItems();
+  const lastRow = virtualRows[virtualRows.length - 1];
 
   useEffect(() => {
-    const lastRow = virtualRows[virtualRows.length - 1];
     if (!lastRow) return;
     if (
       lastRow.index >= items.length - 1 &&
@@ -70,13 +70,8 @@ export function InfiniteList<T>({
     ) {
       fetchNextPage?.();
     }
-  }, [
-    virtualRows,
-    items.length,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastRow?.index, items.length, hasNextPage, isFetchingNextPage]);
 
   return (
     <div ref={scrollRef} className={`overflow-auto ${className}`}>

@@ -41,8 +41,8 @@ export function useTenders() {
   >({
     queryKey: TENDERS_FEED_KEY,
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      searchTenders({ skip: pageParam, take: PAGE_SIZE }),
+    queryFn: ({ pageParam, signal }) =>
+      searchTenders({ skip: pageParam, take: PAGE_SIZE }, { signal }),
     getNextPageParam: (lastPage) => {
       const { skip, take } = lastPage.data.pagination;
       // A short page means we've reached the end of the feed.
