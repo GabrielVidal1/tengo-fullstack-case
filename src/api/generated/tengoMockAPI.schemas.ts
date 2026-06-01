@@ -38,6 +38,8 @@ export interface Pagination {
   skip: number;
   /** The take value that was applied (echoed from the request). */
   take: number;
+  /** Total number of tenders matching the search (i.e. not yet interacted with), across all pages. */
+  total: number;
 }
 
 export interface DecisionStatusRequest {

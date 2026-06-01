@@ -127,7 +127,7 @@ components:
 
     Pagination:
       type: object
-      required: [skip, take]
+      required: [skip, take, total]
       properties:
         skip:
           type: integer
@@ -135,6 +135,11 @@ components:
         take:
           type: integer
           description: The take value that was applied (echoed from the request).
+        total:
+          type: integer
+          description: >-
+            Total number of tenders matching the search (i.e. not yet
+            interacted with), across all pages.
       additionalProperties: false
 
     DecisionStatusRequest:
