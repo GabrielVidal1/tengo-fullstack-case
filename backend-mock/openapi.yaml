@@ -1,0 +1,365 @@
+openapi: 3.1.0
+info:
+  title: Tengo Mock API
+  version: 1.0.0
+  description: |
+    Mock API for the Tengo full-stack case.
+
+    Exposes a paginated tender feed and an endpoint to record the decision a
+    user takes on a tender. Tenders that already have an interaction are
+    excluded from search results, so the feed shrinks as decisions are made.
+
+    The "database" is in-memory and resets when the server restarts.
+servers:
+  - url: http://localhost:3000
+    description: Local mock server
+
+tags:
+  - name: Tenders
+    description: Browse the tender feed
+  - name: Interactions
+    description: Record user decisions on tenders
+
+paths:
+  /tenders/search:
+    post:
+      tags: [Tenders]
+      summary: Search tenders
+      description: |
+        Returns a paginated slice of tenders that the user has not yet
+        interacted with. Any tender referenced by an existing interaction is
+        filtered out before pagination is applied.
+      operationId: searchTenders
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenderSearchRequest'
+            examples:
+              firstPage:
+                summary: First page of 10 results
+                value:
+                  skip: 0
+                  take: 10
+      responses:
+        '200':
+          description: A paginated list of tenders.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderSearchResponse'
+
+  /interactions/decisionStatus:
+    post:
+      tags: [Interactions]
+      summary: Record a decision on a tender
+      description: |
+        Stores the decision a user took on a tender. Once recorded, the tender
+        is excluded from subsequent `/tenders/search` results.
+      operationId: setDecisionStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionStatusRequest'
+            examples:
+              analyze:
+                summary: Mark a tender to analyze
+                value:
+                  tenderId: 1719840
+                  decisionStatus: TO_ANALYZE
+              reject:
+                summary: Reject a tender
+                value:
+                  tenderId: 1719840
+                  decisionStatus: REJECTED
+      responses:
+        '200':
+          description: Decision recorded successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty object on success.
+                additionalProperties: false
+        '400':
+          description: |
+            Invalid payload. Returned when `tenderId` is not a number or
+            `decisionStatus` is not one of the accepted values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid payload
+
+components:
+  schemas:
+    TenderSearchRequest:
+      type: object
+      description: Pagination parameters. Both fields default when omitted.
+      properties:
+        skip:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Number of (non-interacted) tenders to skip.
+        take:
+          type: integer
+          minimum: 0
+          default: 10
+          description: Maximum number of tenders to return.
+      additionalProperties: false
+
+    TenderSearchResponse:
+      type: object
+      required: [pagination, results]
+      properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tender'
+      additionalProperties: false
+
+    Pagination:
+      type: object
+      required: [skip, take]
+      properties:
+        skip:
+          type: integer
+          description: The skip value that was applied (echoed from the request).
+        take:
+          type: integer
+          description: The take value that was applied (echoed from the request).
+      additionalProperties: false
+
+    DecisionStatusRequest:
+      type: object
+      required: [tenderId, decisionStatus]
+      properties:
+        tenderId:
+          type: integer
+          description: Identifier of the tender the decision applies to.
+        decisionStatus:
+          $ref: '#/components/schemas/DecisionStatus'
+      additionalProperties: false
+
+    DecisionStatus:
+      type: string
+      description: The decision a user took on a tender.
+      enum:
+        - TO_ANALYZE
+        - REJECTED
+
+    Tender:
+      type: object
+      required:
+        - id
+        - title
+        - category
+        - status
+        - publicationDate
+        - responseDeadline
+      properties:
+        id:
+          type: integer
+          examples: [1719840]
+        title:
+          type: string
+        cpvAsString:
+          type: array
+          description: CPV codes as raw strings.
+          items:
+            type: string
+          examples: [["45000000"]]
+        category:
+          type: string
+          enum: [SERVICES, WORKS, SUPPLIES]
+        status:
+          type: string
+          enum: [OPEN]
+        publicationDate:
+          type: string
+          format: date-time
+        responseDeadline:
+          type: string
+          format: date-time
+        executionLocation:
+          type: [object, "null"]
+          properties:
+            postalCode:
+              type: [string, "null"]
+          additionalProperties: true
+        buyerContact:
+          $ref: '#/components/schemas/BuyerContact'
+        estimatedValueInEur:
+          type: [number, "null"]
+        durationInMonth:
+          type: [number, "null"]
+        durationInMonthMeta:
+          $ref: '#/components/schemas/EnrichmentMeta'
+        estimatedValueInEurMeta:
+          $ref: '#/components/schemas/EnrichmentMeta'
+        buyer:
+          $ref: '#/components/schemas/Buyer'
+        buyerName:
+          type: string
+        dceRequestStatus:
+          type: string
+          enum: [WAITING]
+        isRenewal:
+          type: boolean
+        markedAsRenewalAt:
+          type: [string, "null"]
+          format: date-time
+        lots:
+          type: array
+          items:
+            $ref: '#/components/schemas/Lot'
+        interaction:
+          description: |
+            The interaction associated with this tender, if any. Always null in
+            search results since interacted tenders are filtered out.
+          type: "null"
+        isDurationInMonthLLMEnriched:
+          type: boolean
+        isEstimatedValueInEurLLMEnriched:
+          type: boolean
+        cpvs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cpv'
+        ragGenerability:
+          type: object
+          properties:
+            isGeneratable:
+              type: boolean
+          additionalProperties: false
+        affectedStreamIds:
+          type: array
+          items:
+            type: integer
+
+    BuyerContact:
+      type: object
+      properties:
+        location:
+          type: object
+          properties:
+            city:
+              type: [string, "null"]
+            postalCode:
+              type: [string, "null"]
+          additionalProperties: false
+      additionalProperties: false
+
+    Buyer:
+      type: object
+      properties:
+        id:
+          type: integer
+        originalName:
+          type: string
+        normalizedName:
+          type: string
+        normalizedAliases:
+          type: array
+          items:
+            type: string
+        postalCode:
+          type: [string, "null"]
+        domainURL:
+          type: [string, "null"]
+        logoURL:
+          type: [string, "null"]
+        sources:
+          type: array
+          items: {}
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    Lot:
+      type: object
+      properties:
+        id:
+          type: integer
+        reference:
+          type: string
+        title:
+          type: string
+        description:
+          type: [string, "null"]
+        valueInEur:
+          type: [number, "null"]
+        durationInMonths:
+          type: [number, "null"]
+        executionLocationString:
+          type: [string, "null"]
+        tenderId:
+          type: integer
+        cpvAsString:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        cpvs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cpv'
+      additionalProperties: true
+
+    Cpv:
+      type: object
+      properties:
+        code:
+          type: string
+        title:
+          type: string
+      additionalProperties: false
+
+    EnrichmentMeta:
+      type: object
+      description: Provenance for an LLM/scraping-enriched field.
+      properties:
+        scrapedValue:
+          type: [string, number, "null"]
+        dataPointSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataPointSource'
+        retreivedWithLLMValue:
+          type: [string, number, "null"]
+      additionalProperties: true
+
+    DataPointSource:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+        docFilePath:
+          type: string
+        originalChunkExtract:
+          type: string
+      additionalProperties: false
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+      additionalProperties: false
