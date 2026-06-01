@@ -1,6 +1,6 @@
-import { InfiniteList } from "./components/InfiniteList";
-import { TenderCard } from "./components/TenderCard";
-import { useTenders } from "./hooks/useTenders";
+import { InfiniteList } from "@/components/InfiniteList";
+import { TenderCard } from "@/components/TenderCard";
+import { useTenders } from "@/hooks/useTenders";
 
 function App() {
   const {

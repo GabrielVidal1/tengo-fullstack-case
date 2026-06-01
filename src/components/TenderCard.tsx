@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronRight, X } from 'lucide-react'
-import type { Tender, TenderStatus } from '../api/generated/tengoMockAPI.schemas'
-import { formatAmount, formatDate, formatLocation } from '../technical/format'
+import type { Tender, TenderStatus } from '@/api/generated/tengoMockAPI.schemas'
+import { formatAmount, formatDate, formatLocation } from '@/technical/format'
 
 interface TenderCardProps {
   tender: Tender

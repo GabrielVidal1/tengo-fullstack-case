@@ -4,12 +4,12 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { useSetDecisionStatus } from "../api/generated/interactions/interactions";
-import { searchTenders } from "../api/generated/tenders/tenders";
+import { useSetDecisionStatus } from "@/api/generated/interactions/interactions";
+import { searchTenders } from "@/api/generated/tenders/tenders";
 import type {
   DecisionStatus,
   Tender,
-} from "../api/generated/tengoMockAPI.schemas";
+} from "@/api/generated/tengoMockAPI.schemas";
 
 /** Tenders fetched per page when scrolling the feed. */
 const PAGE_SIZE = 10;
