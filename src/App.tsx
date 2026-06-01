@@ -5,6 +5,7 @@ import { useTenders } from "./hooks/useTenders";
 function App() {
   const {
     tenders,
+    total,
     isLoading,
     isError,
     fetchNextPage,
@@ -15,9 +16,16 @@ function App() {
   } = useTenders();
 
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col px-4 py-6">
+    <div className="mx-auto flex h-screen max-w-4xl flex-col px-4 py-6">
       <div className="mb-4 flex items-center gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">Appels d'offres</h1>
+        <h1 className="text-xl font-semibold text-gray-900">
+          Appels d'offres à traiter
+        </h1>
+        {!isLoading && !isError && (
+          <span className="inline-flex items-center rounded-full bg-teal-100 px-2.5 py-0.5 text-sm font-medium text-teal-700">
+            {total}
+          </span>
+        )}
       </div>
 
       {isError && (
